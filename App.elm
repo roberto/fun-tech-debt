@@ -25,8 +25,15 @@ type alias Text =
     String
 
 
+type alias Evaluation =
+    Float
+
+
 type alias Item =
-    { text : Text }
+    { effort : Evaluation
+    , value : Evaluation
+    , text : Text
+    }
 
 
 type alias Model =
@@ -36,25 +43,35 @@ type alias Model =
     }
 
 
-model : Model
-model =
-    { newItem = emptyItem
-    , items =
-        [ { text = "Hello" }
-        , { text = "World" }
-        ]
-    , tableState = Table.initialSort "Name"
-    }
-
-
 emptyItem : Item
 emptyItem =
-    { text = "" }
+    { text = "", effort = 0, value = 0 }
+
+
+buildItem : Text -> Item
+buildItem text =
+    { emptyItem | text = text }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( model, Cmd.none )
+    let
+        model =
+            { newItem = emptyItem
+            , items =
+                [ { effort = 1
+                  , value = 3
+                  , text = "Hello"
+                  }
+                , { effort = 2
+                  , value = 1
+                  , text = "World"
+                  }
+                ]
+            , tableState = Table.initialSort "Name"
+            }
+    in
+        ( model, Cmd.none )
 
 
 
@@ -72,23 +89,20 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            model ! []
 
         Add ->
-            ( { model
+            { model
                 | items = model.items ++ [ model.newItem ]
                 , newItem = emptyItem
-              }
-            , Cmd.none
-            )
+            }
+                ! []
 
         UpdateNewItem text ->
-            ( { model | newItem = { text = text } }, Cmd.none )
+            { model | newItem = (buildItem text) } ! []
 
         SetTableState newState ->
-            ( { model | tableState = newState }
-            , Cmd.none
-            )
+            { model | tableState = newState } ! []
 
 
 
@@ -106,12 +120,23 @@ subscriptions model =
 
 inputText : Item -> Html Msg
 inputText item =
-    input [ type_ "text", placeholder "item", value item.text, onInput UpdateNewItem, onEnter Add ] []
+    input
+        [ type_ "text"
+        , placeholder "item"
+        , value item.text
+        , onInput UpdateNewItem
+        , onEnter Add
+        ]
+        []
 
 
 addButton : Html Msg
 addButton =
-    input [ type_ "submit", onClick Add ] [ text "Add" ]
+    input
+        [ type_ "submit"
+        , onClick Add
+        ]
+        [ text "Add" ]
 
 
 view : Model -> Html Msg
@@ -128,8 +153,28 @@ config =
     Table.config
         { toId = .text
         , toMsg = SetTableState
-        , columns = [ Table.stringColumn "Tech Debt" .text ]
+        , columns =
+            [ Table.stringColumn "Tech Debt" .text
+            , evaluationColumn "Effort" .effort
+            , evaluationColumn "Value" .value
+            ]
         }
+
+
+evaluationColumn : String -> (Item -> comparable) -> Table.Column Item Msg
+evaluationColumn name getData =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = viewEvaluationButtons getData
+        , sorter = Table.increasingOrDecreasingBy getData
+        }
+
+
+viewEvaluationButtons : (Item -> comparable) -> Item -> Table.HtmlDetails Msg
+viewEvaluationButtons getData item =
+    Table.HtmlDetails []
+        [ item |> getData |> toString |> text
+        ]
 
 
 
