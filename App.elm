@@ -1,7 +1,7 @@
 module App exposing (main)
 
-import Html exposing (Html, Attribute, div, text, input, li, ul)
-import Html.Attributes exposing (style, type_, placeholder, value)
+import Html exposing (Html, Attribute, div, text, input, li, ul, button)
+import Html.Attributes exposing (style, type_, placeholder, value, disabled)
 import Html.Events exposing (onInput, on, onClick, keyCode)
 import Json.Decode as Json
 import Table
@@ -172,9 +172,15 @@ evaluationColumn name getData =
 
 viewEvaluationButtons : (Item -> comparable) -> Item -> Table.HtmlDetails Msg
 viewEvaluationButtons getData item =
-    Table.HtmlDetails []
-        [ item |> getData |> toString |> text
-        ]
+    let
+        currentNumber =
+            item |> getData
+
+        renderButton number =
+            button [ disabled (currentNumber == number) ] [ text (toString number) ]
+    in
+        Table.HtmlDetails []
+            (List.map renderButton [ 1, 2, 3 ])
 
 
 
