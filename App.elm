@@ -5,6 +5,7 @@ import Html.Attributes exposing (style, type_, placeholder, value, disabled)
 import Html.Events exposing (onInput, on, onClick, keyCode)
 import Json.Decode as Json
 import Table
+import List.Extra exposing (replaceIf)
 
 
 main : Program Never Model Msg
@@ -33,6 +34,7 @@ type alias Item =
     { effort : Evaluation
     , value : Evaluation
     , text : Text
+    , id : Int
     }
 
 
@@ -40,35 +42,23 @@ type alias Model =
     { newItem : Item
     , items : List Item
     , tableState : Table.State
+    , uid : Int
     }
 
 
-emptyItem : Item
-emptyItem =
-    { text = "", effort = 0, value = 0 }
-
-
-buildItem : Text -> Item
-buildItem text =
-    { emptyItem | text = text }
+buildItem : Int -> Item
+buildItem id =
+    { text = "", id = id, effort = 0, value = 0 }
 
 
 init : ( Model, Cmd Msg )
 init =
     let
         model =
-            { newItem = emptyItem
-            , items =
-                [ { effort = 1
-                  , value = 3
-                  , text = "Hello"
-                  }
-                , { effort = 2
-                  , value = 1
-                  , text = "World"
-                  }
-                ]
+            { newItem = buildItem 0
+            , items = []
             , tableState = Table.initialSort "Name"
+            , uid = 1
             }
     in
         ( model, Cmd.none )
@@ -83,6 +73,13 @@ type Msg
     | SetTableState Table.State
     | Add
     | UpdateNewItem String
+    | UpdateEffort Item Evaluation
+    | UpdateValue Item Evaluation
+
+
+type EvaluationType
+    = Value
+    | Effort
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -93,16 +90,41 @@ update msg model =
 
         Add ->
             { model
-                | items = model.items ++ [ model.newItem ]
-                , newItem = emptyItem
+                | uid = model.uid + 1
+                , items = model.items ++ [ model.newItem ]
+                , newItem = buildItem model.uid
             }
                 ! []
 
         UpdateNewItem text ->
-            { model | newItem = (buildItem text) } ! []
+            let
+                updateItem item text =
+                    { item | text = text }
+            in
+                { model | newItem = (updateItem model.newItem text) } ! []
 
         SetTableState newState ->
             { model | tableState = newState } ! []
+
+        UpdateValue item newValue ->
+            let
+                findItem candidate =
+                    item.id == candidate.id
+
+                newItems =
+                    replaceIf findItem { item | value = newValue } model.items
+            in
+                { model | items = newItems } ! []
+
+        UpdateEffort item newEffort ->
+            let
+                findItem candidate =
+                    item.id == candidate.id
+
+                newItems =
+                    replaceIf findItem { item | effort = newEffort } model.items
+            in
+                { model | items = newItems } ! []
 
 
 
@@ -155,32 +177,46 @@ config =
         , toMsg = SetTableState
         , columns =
             [ Table.stringColumn "Tech Debt" .text
-            , evaluationColumn "Effort" .effort
-            , evaluationColumn "Value" .value
+            , evaluationColumn "Effort" .effort Effort
+            , evaluationColumn "Value" .value Value
             ]
         }
 
 
-evaluationColumn : String -> (Item -> comparable) -> Table.Column Item Msg
-evaluationColumn name getData =
+evaluationColumn : String -> (Item -> Evaluation) -> EvaluationType -> Table.Column Item Msg
+evaluationColumn name getData evaluationType =
     Table.veryCustomColumn
         { name = name
-        , viewData = viewEvaluationButtons getData
+        , viewData = viewEvaluationButtons getData evaluationType
         , sorter = Table.increasingOrDecreasingBy getData
         }
 
 
-viewEvaluationButtons : (Item -> comparable) -> Item -> Table.HtmlDetails Msg
-viewEvaluationButtons getData item =
+viewEvaluationButtons : (Item -> Evaluation) -> EvaluationType -> Item -> Table.HtmlDetails Msg
+viewEvaluationButtons getData evaluationType item =
     let
         currentNumber =
             item |> getData
 
         renderButton number =
-            button [ disabled (currentNumber == number) ] [ text (toString number) ]
+            button
+                [ onClick (handleClick evaluationType item number)
+                , disabled (number == currentNumber)
+                ]
+                [ text (toString number) ]
     in
         Table.HtmlDetails []
             (List.map renderButton [ 1, 2, 3 ])
+
+
+handleClick : EvaluationType -> Item -> Evaluation -> Msg
+handleClick evaluationType item number =
+    case evaluationType of
+        Value ->
+            UpdateValue item number
+
+        Effort ->
+            UpdateEffort item number
 
 
 
