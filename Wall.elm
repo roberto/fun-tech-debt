@@ -5,19 +5,22 @@ import Element exposing (Element, toHtml)
 import Html exposing (Html)
 import PostIt
 import Zone
-import Item exposing (Item)
+import Item exposing (Item, PositionTexts)
 
 
-draw : ( Int, Int ) -> List Item -> Html a
-draw ( width, height ) items =
+draw : ( Int, Int ) -> List PositionTexts -> Html a
+draw ( width, height ) positionTexts =
     let
         zones =
             Zone.draw ( width, height )
 
+        postItZone (Item.PositionTexts position texts) =
+            PostIt.draw ( width, height ) position texts
+
         postIts =
-            PostIt.draw ( width, height ) (List.map .text items)
+            List.map postItZone positionTexts
 
         things =
-            [ zones, postIts ]
+            zones :: postIts
     in
         collage width height things |> toHtml

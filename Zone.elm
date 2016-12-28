@@ -25,8 +25,8 @@ type alias Dimension =
     ( Float, Float )
 
 
-default : List Zone
-default =
+zones : List Zone
+zones =
     [ { position = Element.topLeft, section = Bad }
     , { position = Element.topRight, section = Neutral }
     , { position = Element.bottomLeft, section = Neutral }
@@ -70,4 +70,4 @@ drawZone ( widthTotal, heightTotal ) zone =
 
 draw : ( Int, Int ) -> Form
 draw dimension =
-    List.map (drawZone dimension) default |> group
+    List.map (drawZone dimension) zones |> group

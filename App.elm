@@ -7,7 +7,8 @@ import Json.Decode as Json
 import Table
 import List.Extra exposing (replaceIf)
 import Wall
-import Item exposing (Item, Evaluation, Text)
+import Item exposing (Item, Evaluation, Text, PositionTexts)
+import Element exposing (Position)
 
 
 main : Program Never Model Msg
@@ -153,8 +154,27 @@ view model =
         [ inputText model.newItem
         , addButton
         , Table.view config model.tableState model.items
-        , Wall.draw ( 800, 600 ) model.items
+        , Wall.draw ( 1000, 1000 ) (groupItems model.items)
         ]
+
+
+groupItems : List Item -> List PositionTexts
+groupItems items =
+    let
+        possibilities =
+            [ { value = 0, effort = 0, position = Element.bottomLeft }
+            , { value = 0, effort = 1, position = Element.topLeft }
+            , { value = 1, effort = 1, position = Element.topRight }
+            , { value = 1, effort = 0, position = Element.bottomRight }
+            ]
+
+        filterItem possibility item =
+            possibility.value == item.value && possibility.effort == item.effort
+
+        buildItemPosition possibility =
+            Item.PositionTexts possibility.position (List.map .text (List.filter (filterItem possibility) items))
+    in
+        List.map buildItemPosition possibilities
 
 
 config : Table.Config Item Msg

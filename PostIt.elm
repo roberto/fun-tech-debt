@@ -2,7 +2,7 @@ module PostIt exposing (draw)
 
 import Collage exposing (Form, collage, filled, group, outlined, solid, rect, text, toForm)
 import Text exposing (fromString, monospace)
-import Element exposing (leftAligned, flow, down, spacer, container, middle)
+import Element exposing (Position, leftAligned, flow, down, spacer, container, middle)
 import Color
 
 
@@ -40,8 +40,8 @@ drawPostIt message =
         group [ content, border, formattedText ]
 
 
-draw : ( Int, Int ) -> List String -> Form
-draw ( widthTotal, heightTotal ) texts =
+draw : ( Int, Int ) -> Position -> List String -> Form
+draw ( widthTotal, heightTotal ) position texts =
     let
         element form =
             collage (round width) (round height) [ form ]
@@ -49,10 +49,13 @@ draw ( widthTotal, heightTotal ) texts =
         plot text =
             element (drawPostIt text)
 
+        setPosition =
+            container widthTotal heightTotal position
+
         postIts =
             List.map plot texts
 
         spaces =
             List.intersperse (spacer 5 5)
     in
-        flow down (spaces postIts) |> toForm
+        flow down (spaces postIts) |> setPosition |> toForm
