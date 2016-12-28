@@ -6,6 +6,8 @@ import Html.Events exposing (onInput, on, onClick, keyCode)
 import Json.Decode as Json
 import Table
 import List.Extra exposing (replaceIf)
+import Wall
+import Item exposing (Item, Evaluation, Text)
 
 
 main : Program Never Model Msg
@@ -20,22 +22,6 @@ main =
 
 
 -- Model
-
-
-type alias Text =
-    String
-
-
-type alias Evaluation =
-    Float
-
-
-type alias Item =
-    { effort : Evaluation
-    , value : Evaluation
-    , text : Text
-    , id : Int
-    }
 
 
 type alias Model =
@@ -167,6 +153,7 @@ view model =
         [ inputText model.newItem
         , addButton
         , Table.view config model.tableState model.items
+        , Wall.draw ( 800, 600 ) model.items
         ]
 
 
@@ -206,7 +193,7 @@ viewEvaluationButtons getData evaluationType item =
                 [ text (toString number) ]
     in
         Table.HtmlDetails []
-            (List.map renderButton [ 1, 2, 3 ])
+            (List.map renderButton [ 0, 1 ])
 
 
 handleClick : EvaluationType -> Item -> Evaluation -> Msg
