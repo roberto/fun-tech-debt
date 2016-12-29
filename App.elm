@@ -64,7 +64,7 @@ type Msg
 
 
 type EvaluationType
-    = Value
+    = Pain
     | Effort
 
 
@@ -91,13 +91,13 @@ update msg model =
 
         EvaluationTableMsg msg2 ->
             case msg2 of
-                EvaluationTable.UpdateValue item newValue ->
+                EvaluationTable.UpdatePain item newPain ->
                     let
                         findItem candidate =
                             item.id == candidate.id
 
                         newItems =
-                            replaceIf findItem { item | value = newValue } model.items
+                            replaceIf findItem { item | value = newPain } model.items
                     in
                         { model | items = newItems } ! []
 

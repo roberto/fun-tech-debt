@@ -1,4 +1,4 @@
-module EvaluationTable exposing (view, Msg(UpdateEffort, UpdateValue, SetTableState))
+module EvaluationTable exposing (view, Msg(UpdateEffort, UpdatePain, SetTableState))
 
 import Table
 import EvaluationColumn exposing (evaluationColumn)
@@ -7,13 +7,13 @@ import Html
 
 
 type EvaluationType
-    = Value
+    = Pain
     | Effort
 
 
 type Msg
     = UpdateEffort Item Evaluation
-    | UpdateValue Item Evaluation
+    | UpdatePain Item Evaluation
     | SetTableState Table.State
 
 
@@ -34,7 +34,7 @@ config msg =
             , columns =
                 [ Table.stringColumn "Tech Debt" .text
                 , evaluationColumn values "Effort" .effort (handleClick msg Effort)
-                , evaluationColumn values "Value" .value (handleClick msg Value)
+                , evaluationColumn values "Pain" .value (handleClick msg Pain)
                 ]
             }
 
@@ -42,8 +42,8 @@ config msg =
 handleClick : (Msg -> msg) -> EvaluationType -> Item -> Evaluation -> msg
 handleClick msg evaluationType item number =
     case evaluationType of
-        Value ->
-            msg (UpdateValue item number)
+        Pain ->
+            msg (UpdatePain item number)
 
         Effort ->
             msg (UpdateEffort item number)
