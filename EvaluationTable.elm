@@ -30,7 +30,7 @@ config toMsg =
     in
         Table.config
             { toId = .text
-            , toMsg = (\x -> toMsg (SetTableState x))
+            , toMsg = SetTableState >> toMsg
             , columns =
                 [ Table.stringColumn "Tech Debt" .text
                 , evaluationColumn values "Effort" .effort (handleClick toMsg Effort)
