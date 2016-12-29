@@ -23,27 +23,27 @@ view state items msg =
 
 
 config : (Msg -> msg) -> Table.Config Item msg
-config msg =
+config toMsg =
     let
         values =
             [ 1, 2, 3 ]
     in
         Table.config
             { toId = .text
-            , toMsg = (\x -> msg (SetTableState x))
+            , toMsg = (\x -> toMsg (SetTableState x))
             , columns =
                 [ Table.stringColumn "Tech Debt" .text
-                , evaluationColumn values "Effort" .effort (handleClick msg Effort)
-                , evaluationColumn values "Pain" .value (handleClick msg Pain)
+                , evaluationColumn values "Effort" .effort (handleClick toMsg Effort)
+                , evaluationColumn values "Pain" .value (handleClick toMsg Pain)
                 ]
             }
 
 
 handleClick : (Msg -> msg) -> EvaluationType -> Item -> Evaluation -> msg
-handleClick msg evaluationType item number =
+handleClick toMsg evaluationType item number =
     case evaluationType of
         Pain ->
-            msg (UpdatePain item number)
+            toMsg (UpdatePain item number)
 
         Effort ->
-            msg (UpdateEffort item number)
+            toMsg (UpdateEffort item number)
