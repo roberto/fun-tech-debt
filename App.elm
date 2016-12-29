@@ -4,12 +4,12 @@ import Html exposing (Html, Attribute, div, text, input, li, ul, button)
 import Html.Attributes exposing (style, type_, placeholder, value, disabled)
 import Html.Events exposing (onInput, on, onClick, keyCode)
 import Json.Decode as Json
-import Table
 import List.Extra exposing (replaceIf)
+import Table
 import Wall
 import Item exposing (Item, Evaluation, Text, PositionTexts)
 import Element exposing (Position)
-import EvaluationColumn exposing (evaluationColumn)
+import EvaluationTable
 
 
 main : Program Never Model Msg
@@ -58,11 +58,9 @@ init =
 
 type Msg
     = NoOp
-    | SetTableState Table.State
+    | EvaluationTableMsg EvaluationTable.Msg
     | Add
     | UpdateNewItem String
-    | UpdateEffort Item Evaluation
-    | UpdateValue Item Evaluation
 
 
 type EvaluationType
@@ -91,28 +89,30 @@ update msg model =
             in
                 { model | newItem = (updateItem model.newItem text) } ! []
 
-        SetTableState newState ->
-            { model | tableState = newState } ! []
+        EvaluationTableMsg msg2 ->
+            case msg2 of
+                EvaluationTable.UpdateValue item newValue ->
+                    let
+                        findItem candidate =
+                            item.id == candidate.id
 
-        UpdateValue item newValue ->
-            let
-                findItem candidate =
-                    item.id == candidate.id
+                        newItems =
+                            replaceIf findItem { item | value = newValue } model.items
+                    in
+                        { model | items = newItems } ! []
 
-                newItems =
-                    replaceIf findItem { item | value = newValue } model.items
-            in
-                { model | items = newItems } ! []
+                EvaluationTable.UpdateEffort item newEffort ->
+                    let
+                        findItem candidate =
+                            item.id == candidate.id
 
-        UpdateEffort item newEffort ->
-            let
-                findItem candidate =
-                    item.id == candidate.id
+                        newItems =
+                            replaceIf findItem { item | effort = newEffort } model.items
+                    in
+                        { model | items = newItems } ! []
 
-                newItems =
-                    replaceIf findItem { item | effort = newEffort } model.items
-            in
-                { model | items = newItems } ! []
+                EvaluationTable.SetTableState newState ->
+                    { model | tableState = newState } ! []
 
 
 
@@ -154,7 +154,7 @@ view model =
     div []
         [ inputText model.newItem
         , addButton
-        , Table.view config model.tableState model.items
+        , EvaluationTable.view model.tableState model.items EvaluationTableMsg
         , Wall.draw ( 1000, 800 ) (groupItems model.items)
         ]
 
@@ -176,37 +176,6 @@ groupItems items =
             Item.PositionTexts possibility.position (List.map .text (List.filter (filterItem possibility) items))
     in
         List.map buildItemPosition possibilities
-
-
-config : Table.Config Item Msg
-config =
-    let
-        values =
-            [ 1, 2, 3 ]
-    in
-        Table.config
-            { toId = .text
-            , toMsg = SetTableState
-            , columns =
-                [ Table.stringColumn "Tech Debt" .text
-                , evaluationColumn values "Effort" .effort (handleClick Effort)
-                , evaluationColumn values "Value" .value (handleClick Value)
-                ]
-            }
-
-
-handleClick : EvaluationType -> Item -> Evaluation -> Msg
-handleClick evaluationType item number =
-    case evaluationType of
-        Value ->
-            UpdateValue item number
-
-        Effort ->
-            UpdateEffort item number
-
-
-
--- aux
 
 
 onEnter : Msg -> Attribute Msg
