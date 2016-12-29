@@ -9,6 +9,7 @@ import List.Extra exposing (replaceIf)
 import Wall
 import Item exposing (Item, Evaluation, Text, PositionTexts)
 import Element exposing (Position)
+import EvaluationColumn exposing (evaluationColumn)
 
 
 main : Program Never Model Msg
@@ -154,7 +155,7 @@ view model =
         [ inputText model.newItem
         , addButton
         , Table.view config model.tableState model.items
-        , Wall.draw ( 1000, 1000 ) (groupItems model.items)
+        , Wall.draw ( 1000, 800 ) (groupItems model.items)
         ]
 
 
@@ -179,41 +180,19 @@ groupItems items =
 
 config : Table.Config Item Msg
 config =
-    Table.config
-        { toId = .text
-        , toMsg = SetTableState
-        , columns =
-            [ Table.stringColumn "Tech Debt" .text
-            , evaluationColumn "Effort" .effort Effort
-            , evaluationColumn "Value" .value Value
-            ]
-        }
-
-
-evaluationColumn : String -> (Item -> Evaluation) -> EvaluationType -> Table.Column Item Msg
-evaluationColumn name getData evaluationType =
-    Table.veryCustomColumn
-        { name = name
-        , viewData = viewEvaluationButtons getData evaluationType
-        , sorter = Table.increasingOrDecreasingBy getData
-        }
-
-
-viewEvaluationButtons : (Item -> Evaluation) -> EvaluationType -> Item -> Table.HtmlDetails Msg
-viewEvaluationButtons getData evaluationType item =
     let
-        currentNumber =
-            item |> getData
-
-        renderButton number =
-            button
-                [ onClick (handleClick evaluationType item number)
-                , disabled (number == currentNumber)
-                ]
-                [ text (toString number) ]
+        values =
+            [ 1, 2, 3 ]
     in
-        Table.HtmlDetails []
-            (List.map renderButton [ 0, 1 ])
+        Table.config
+            { toId = .text
+            , toMsg = SetTableState
+            , columns =
+                [ Table.stringColumn "Tech Debt" .text
+                , evaluationColumn values "Effort" .effort (handleClick Effort)
+                , evaluationColumn values "Value" .value (handleClick Value)
+                ]
+            }
 
 
 handleClick : EvaluationType -> Item -> Evaluation -> Msg
