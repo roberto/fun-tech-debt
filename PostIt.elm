@@ -1,61 +1,26 @@
-module PostIt exposing (draw)
+module PostIt exposing (view)
 
-import Collage exposing (Form, collage, filled, group, outlined, solid, rect, text, toForm)
-import Text exposing (fromString, monospace)
-import Element exposing (Position, leftAligned, flow, down, spacer, container, middle)
-import Color
-
-
-width : Float
-width =
-    100
+import Html exposing (Html, div)
+import Html.Attributes exposing (style)
+import Css exposing (border3, boxShadow3, px, solid, asPairs, rgb, width, height, fontSize, margin)
+import Item exposing (Item)
 
 
-height : Float
-height =
-    50
+cardStyle : Html.Attribute msg
+cardStyle =
+    [ border3 (px 1) solid (rgb 1 1 1)
+    , boxShadow3 (px 1) (px 2) (px 3)
+    , width (px 150)
+    , height (px 50)
+    , fontSize (px 12)
+    , margin (px 5)
+    ]
+        |> asPairs
+        |> style
 
 
-drawPostIt : String -> Form
-drawPostIt message =
-    let
-        formattedText =
-            message
-                |> fromString
-                |> Text.height 12
-                |> monospace
-                |> leftAligned
-                |> container (round width) (round height) Element.topLeft
-                |> toForm
-
-        shape =
-            rect width height
-
-        content =
-            shape |> filled Color.white
-
-        border =
-            shape |> outlined (solid Color.black)
-    in
-        group [ content, border, formattedText ]
-
-
-draw : ( Int, Int ) -> Position -> List String -> Form
-draw ( widthTotal, heightTotal ) position texts =
-    let
-        element form =
-            collage (round width) (round height) [ form ]
-
-        plot text =
-            element (drawPostIt text)
-
-        setPosition =
-            container widthTotal heightTotal position
-
-        postIts =
-            List.map plot texts
-
-        spaces =
-            List.intersperse (spacer 5 5)
-    in
-        flow down (spaces postIts) |> setPosition |> toForm
+view : Item -> Html a
+view { text } =
+    div
+        [ cardStyle ]
+        [ Html.text text ]

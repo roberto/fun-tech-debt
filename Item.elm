@@ -1,10 +1,4 @@
-module Item exposing (Item, Text, Evaluation, PositionTexts(PositionTexts))
-
-import Element exposing (Position)
-
-
-type PositionTexts
-    = PositionTexts Position (List Text)
+module Item exposing (Item, Text, Evaluation)
 
 
 type alias Item =
