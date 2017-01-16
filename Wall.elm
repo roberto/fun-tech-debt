@@ -1,22 +1,40 @@
 module Wall exposing (view)
 
 import Html exposing (Html, div)
+import Html.Attributes exposing (style)
 import Item exposing (Item, Evaluation)
 import PostIt exposing (view)
 import Dict.Extra exposing (groupBy)
 import Dict
+import Css exposing (..)
+
+
+styles : List Css.Mixin -> Html.Attribute msg
+styles =
+    asPairs >> style
 
 
 view : List Item -> Html a
 view items =
     let
-        list =
-            -- temp... split by groups
-            items |> groupByEvaluation |> Dict.values |> List.concat
+        groups =
+            items |> groupByEvaluation |> Dict.toList
+
+        renderGroup ( evaluations, list ) =
+            div [ groupStyle evaluations ]
+                (List.map PostIt.view list)
+
+        groupStyle evaluations =
+            (List.append (positionStyle evaluations) [ position absolute ]) |> styles
+
+        positionStyle ( x, y ) =
+            [ top (pct ((3 - x) * 50)), left (pct ((y - 1) * 50)) ]
     in
         div
-            []
-            (List.map PostIt.view list)
+            [ styles
+                [ position relative, width (pct 90), height (pct 90) ]
+            ]
+            (List.map renderGroup groups)
 
 
 groupByEvaluation : List Item -> Dict.Dict ( Evaluation, Evaluation ) (List Item)
